@@ -8,7 +8,7 @@ public class Main {
         System.out.println(":::::Iniciando sistema:::::");
 
         //Criando um paciente (objeto do tipo Paciente)
-        Paciente paciente1 = new Paciente();
+        Paciente paciente1 = new Paciente("Ava Daniels");
 
         //Atribuindo valores ao objeto paciente1
         paciente1.id = UUID.randomUUID();
