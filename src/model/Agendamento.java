@@ -1,0 +1,19 @@
+package model;
+
+import java.time.LocalDateTime;
+
+public class Agendamento {
+    private String id;
+    private Paciente paciente;
+    private LocalDateTime dataHora;
+    private String especialidade;
+    private boolean confirmado;
+
+    public boolean validarAgendamento(Paciente p, LocalDateTime data) {
+        // Regra: Não permitir agendamentos no passado
+        if (data.isBefore(LocalDateTime.now())) {
+            return false;
+        }
+        return true;
+    }
+}
