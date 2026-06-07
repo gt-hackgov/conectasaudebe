@@ -1,4 +1,7 @@
-//Classe de domínio essencial
+package model;
+
+import java.time.LocalDateTime;
+
 public class Agendamento {
     private String id;
     private Paciente paciente;
