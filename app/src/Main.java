@@ -1,6 +1,5 @@
 import model.Paciente;
 
-import java.time.LocalDate;
 import java.util.Scanner;
 import java.util.UUID;
 
