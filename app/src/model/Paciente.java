@@ -11,8 +11,11 @@ public class Paciente {
     public String endereco;
     public String email;
     public String telefone;
-    
-    public Paciente (String nomeCompleto){
+
+    public Paciente() {
+    }
+
+    public Paciente(String nomeCompleto) {
         this.nomeCompleto = nomeCompleto;
     }
 }

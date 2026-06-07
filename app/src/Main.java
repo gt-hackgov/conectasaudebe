@@ -19,12 +19,27 @@ public class Main {
         paciente1.email = "email@email.com";
         paciente1.telefone = "(11)91111-1111";
 
-
-        //Exibindo valores dos atributos do objeto
-        System.out.println("Dados do paciente:" +
+        //Exibindo valores dos atributos do objeto paciente1
+        System.out.println("Dados do paciente 1:" +
                 "\nNome: " + paciente1.nomeCompleto +
                 "\nID: " + paciente1.id +
                 "\nEmail: " + paciente1.email
+        );
+
+
+        //Paciente 2
+        Paciente paciente2 = new Paciente();
+        paciente2.id = UUID.randomUUID();
+        paciente2.cpf = "111.111.111-12";
+        paciente2.nomeCompleto = "Lara Croft";
+        paciente2.dataNascimento = LocalDate.of(1991, 01, 01);
+        paciente2.endereco = "Rua 2";
+        paciente2.email = "email2@email.com";
+        paciente2.telefone = "(11)91111-1112";
+        System.out.println("Dados do paciente 2:" +
+                "\nNome: " + paciente2.nomeCompleto +
+                "\nID: " + paciente2.id +
+                "\nEmail: " + paciente2.email
         );
     }
 }
