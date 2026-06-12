@@ -19,6 +19,9 @@ target/
 *.iml
 *.ipr
 
+# IntelliJ IDEA build output directory
+out/
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
