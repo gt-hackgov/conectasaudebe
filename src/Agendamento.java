@@ -1,3 +1,4 @@
+import java.time.LocalDateTime;
 //Classe de domínio essencial
 public class Agendamento {
     private String id;
