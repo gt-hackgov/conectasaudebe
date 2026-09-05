@@ -2,6 +2,7 @@ package br.com.conectasaude.controller;
 
 import br.com.conectasaude.dto.auth.LoginRequest;
 import br.com.conectasaude.dto.auth.LoginResponse;
+import br.com.conectasaude.exception.CredenciaisInvalidasException;
 import br.com.conectasaude.model.audit.AuditAction;
 import br.com.conectasaude.model.audit.AuditResult;
 import br.com.conectasaude.service.AuditService;
@@ -51,7 +52,7 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
 
-        } catch (IllegalArgumentException exception) {
+        } catch (CredenciaisInvalidasException exception) {
 
             auditService.registrar(
                     null,

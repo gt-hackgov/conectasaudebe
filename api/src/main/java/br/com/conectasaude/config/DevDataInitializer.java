@@ -4,9 +4,11 @@ import br.com.conectasaude.model.Role;
 import br.com.conectasaude.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("dev")
 public class DevDataInitializer implements CommandLineRunner {
 
     private final UsuarioService usuarioService;

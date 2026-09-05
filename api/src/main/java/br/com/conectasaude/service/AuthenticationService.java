@@ -2,6 +2,7 @@ package br.com.conectasaude.service;
 
 import br.com.conectasaude.dto.auth.LoginRequest;
 import br.com.conectasaude.dto.auth.LoginResponse;
+import br.com.conectasaude.exception.CredenciaisInvalidasException;
 import br.com.conectasaude.model.Usuario;
 import br.com.conectasaude.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,19 +29,17 @@ public class AuthenticationService {
 
         Usuario usuario = usuarioRepository
                 .findByCpf(request.cpf())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("CPF ou senha inválidos")
-                );
+                .orElseThrow(CredenciaisInvalidasException::new);
 
         if (!usuario.isAtivo()) {
-            throw new IllegalArgumentException("Usuário inativo");
+            throw new CredenciaisInvalidasException();
         }
 
         if (!passwordEncoder.matches(
                 request.senha(),
                 usuario.getPasswordHash()
         )) {
-            throw new IllegalArgumentException("CPF ou senha inválidos");
+            throw new CredenciaisInvalidasException();
         }
 
         String token = jwtService.gerarToken(usuario);

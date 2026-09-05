@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import br.com.conectasaude.security.AuditedAccessDeniedHandler;
+import br.com.conectasaude.security.RestAuthenticationEntryPoint;
 
 @Configuration
 public class SecurityConfig {
@@ -44,7 +45,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtAuthenticationConverter jwtAuthenticationConverter,
-            AuditedAccessDeniedHandler auditedAccessDeniedHandler
+            AuditedAccessDeniedHandler auditedAccessDeniedHandler,
+            RestAuthenticationEntryPoint restAuthenticationEntryPoint
     ) throws Exception {
 
         http
@@ -56,8 +58,9 @@ public class SecurityConfig {
                         )
                 )
 
-                .exceptionHandling(exception ->
-                        exception.accessDeniedHandler(auditedAccessDeniedHandler)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(auditedAccessDeniedHandler)
                 )
 
                 .authorizeHttpRequests(auth -> auth
@@ -90,8 +93,10 @@ public class SecurityConfig {
                         .authenticated()
                 )
 
-                .oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwt ->
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(auditedAccessDeniedHandler)
+                        .jwt(jwt ->
                                 jwt.jwtAuthenticationConverter(
                                         jwtAuthenticationConverter
                                 )
