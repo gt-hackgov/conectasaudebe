@@ -13,26 +13,7 @@ type NotificationItem = {
   time: string;
 };
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "notif-1",
-    title: "Previna-se da Dengue!",
-    message: "Elimine focos de água parada. Converse com nossa assistente virtual para saber os sintomas e cuidados.",
-    time: "Agora",
-  },
-  {
-    id: "notif-2",
-    title: "Lembrete de Consulta",
-    message: "Sua consulta agendada está próxima. Chegue com 15 minutos de antecedência na UBS.",
-    time: "Há 1 hora",
-  },
-  {
-    id: "notif-3",
-    title: "Campanha de Vacinação",
-    message: "Vacinação contra Influenza disponível em todas as UBS do município.",
-    time: "Ontem",
-  },
-];
+// Removido INITIAL_NOTIFICATIONS (os dados agora vêm da API)
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -50,8 +31,8 @@ export default function DashboardPage() {
   });
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [notificationQueue] = useState<Queue<NotificationItem>>(() => Queue.fromArray(INITIAL_NOTIFICATIONS));
-  const [notificationsArray, setNotificationsArray] = useState<NotificationItem[]>(() => INITIAL_NOTIFICATIONS);
+  const [notificationQueue] = useState<Queue<NotificationItem>>(() => new Queue<NotificationItem>());
+  const [notificationsArray, setNotificationsArray] = useState<NotificationItem[]>([]);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -73,6 +54,25 @@ export default function DashboardPage() {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const res = await fetch("/api/notifications", {
+          headers: { Authorization: "Bearer mock-token-123" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          while (!notificationQueue.isEmpty()) notificationQueue.dequeue();
+          data.notifications.forEach((n: NotificationItem) => notificationQueue.enqueue(n));
+          setNotificationsArray(notificationQueue.toArray());
+        }
+      } catch (error) {
+        console.error("Erro ao buscar notificações:", error);
+      }
+    }
+    fetchNotifications();
+  }, [notificationQueue]);
 
   const welcomeMessage = useMemo(() => {
     if (!userName) return "Olá";

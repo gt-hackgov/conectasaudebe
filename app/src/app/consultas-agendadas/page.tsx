@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LinkedList, Stack } from "@/lib/dataStructures";
 
 type Appointment = {
+  id?: string;
   date: string;
   time: string;
   location: string;
@@ -26,44 +27,68 @@ export default function ScheduledAppointmentsPage() {
   const [undoCount, setUndoCount] = useState<number>(0);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem("saudeAppointments");
-    if (!raw) {
-      setAppointmentsArray([]);
-      return;
+    async function fetchAppointments() {
+      try {
+        const res = await fetch("/api/appointments", {
+          headers: { Authorization: "Bearer mock-token-123" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const list = LinkedList.fromArray<Appointment>(data.appointments);
+          setAppointmentList(list);
+          setAppointmentsArray(list.toArray());
+        }
+      } catch (error) {
+        console.error("Erro ao buscar consultas:", error);
+      }
     }
-
-    try {
-      const parsed = JSON.parse(raw) as Appointment[];
-      const list = LinkedList.fromArray(parsed);
-      setAppointmentList(list);
-      setAppointmentsArray(list.toArray());
-    } catch {
-      setAppointmentsArray([]);
-    }
+    fetchAppointments();
   }, []);
 
-  const saveAppointments = (list: LinkedList<Appointment>) => {
-    const arr = list.toArray();
-    setAppointmentsArray(arr);
-    window.localStorage.setItem("saudeAppointments", JSON.stringify(arr));
+  const syncList = (list: LinkedList<Appointment>) => {
+    setAppointmentsArray(list.toArray());
   };
 
-  const handleCancelAppointment = (createdAt: string) => {
-    const removed = appointmentList.remove((item) => item.createdAt === createdAt);
-    if (removed) {
-      undoStack.push({ type: "CANCEL", appointment: removed });
-      setUndoCount(undoStack.size());
-      saveAppointments(appointmentList);
+  const handleCancelAppointment = async (createdAt: string) => {
+    const target = appointmentList.toArray().find((a) => a.createdAt === createdAt);
+    if (!target) return;
+
+    try {
+      if (target.id) {
+        await fetch(`/api/appointments/${target.id}`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer mock-token-123" },
+        });
+      }
+      const removed = appointmentList.remove((item) => item.createdAt === createdAt);
+      if (removed) {
+        undoStack.push({ type: "CANCEL", appointment: removed });
+        setUndoCount(undoStack.size());
+        syncList(appointmentList);
+      }
+    } catch (error) {
+      console.error("Erro ao cancelar consulta:", error);
     }
   };
 
-  const handleUndo = () => {
+  const handleUndo = async () => {
     const lastAction = undoStack.pop();
     if (lastAction && lastAction.type === "CANCEL") {
-      appointmentList.append(lastAction.appointment);
-      setUndoCount(undoStack.size());
-      saveAppointments(appointmentList);
+      try {
+        await fetch("/api/appointments", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer mock-token-123",
+          },
+          body: JSON.stringify(lastAction.appointment),
+        });
+        appointmentList.append(lastAction.appointment);
+        setUndoCount(undoStack.size());
+        syncList(appointmentList);
+      } catch (error) {
+        console.error("Erro ao desfazer cancelamento:", error);
+      }
     }
   };
 
