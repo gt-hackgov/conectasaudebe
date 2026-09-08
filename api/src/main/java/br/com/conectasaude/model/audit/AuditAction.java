@@ -1,0 +1,13 @@
+package br.com.conectasaude.model.audit;
+
+public enum AuditAction {
+    LOGIN,
+    VISUALIZAR_DADO_SENSIVEL,
+    ALTERAR_STATUS,
+    EXPORTAR_DADOS,
+    EXCLUIR_REGISTRO,
+    ALTERAR_PERMISSAO,
+    ACESSAR_AREA_ADMINISTRATIVA,
+    CONSULTAR_AUDITORIA,
+    ACESSO_NEGADO
+}

@@ -38,3 +38,8 @@ git checkout develop
 git pull
 git checkout -b feat/nome-da-sua-task
 ```
+## Governança e Auditoria
+
+A documentação de segurança, controle de acesso e trilha de auditoria está disponível em:
+
+[Governança e Auditoria](docs/governanca-auditoria.md)
