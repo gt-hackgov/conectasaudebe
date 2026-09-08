@@ -31,15 +31,32 @@ public class DevDataInitializer implements CommandLineRunner {
     @Value("${app.dev.medico.password:}")
     private String medicoSenha;
 
-    public DevDataInitializer(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
-    }
-
     @Override
     public void run(String... args) {
-
         criarAdministradorSeConfigurado();
         criarMedicoSeConfigurado();
+        seedMockData();
+    }
+
+    private final br.com.conectasaude.repository.NotificacaoRepository notificacaoRepository;
+    private final br.com.conectasaude.repository.AgendamentoRepository agendamentoRepository;
+
+    public DevDataInitializer(
+        UsuarioService usuarioService,
+        br.com.conectasaude.repository.NotificacaoRepository notificacaoRepository,
+        br.com.conectasaude.repository.AgendamentoRepository agendamentoRepository
+    ) {
+        this.usuarioService = usuarioService;
+        this.notificacaoRepository = notificacaoRepository;
+        this.agendamentoRepository = agendamentoRepository;
+    }
+
+    private void seedMockData() {
+        if (notificacaoRepository.count() == 0) {
+            notificacaoRepository.save(new br.com.conectasaude.model.Notificacao("notif-1", "Previna-se da Dengue!", "Elimine focos de água parada. Converse com nossa assistente virtual para saber os sintomas e cuidados.", "Agora"));
+            notificacaoRepository.save(new br.com.conectasaude.model.Notificacao("notif-2", "Lembrete de Consulta", "Sua consulta agendada está próxima. Chegue com 15 minutos de antecedência na UBS.", "Há 1 hora"));
+            notificacaoRepository.save(new br.com.conectasaude.model.Notificacao("notif-3", "Campanha de Vacinação", "Vacinação contra Influenza disponível em todas as UBS do município.", "Ontem"));
+        }
     }
 
     private void criarAdministradorSeConfigurado() {
