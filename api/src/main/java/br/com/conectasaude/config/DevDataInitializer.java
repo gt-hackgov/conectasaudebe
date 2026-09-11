@@ -37,6 +37,15 @@ public class DevDataInitializer implements CommandLineRunner {
     @Value("${app.dev.medico.password:}")
     private String medicoSenha;
 
+    @Value("${app.dev.paciente.cpf:}")
+    private String pacienteCpf;
+
+    @Value("${app.dev.paciente.nome:}")
+    private String pacienteNome;
+
+    @Value("${app.dev.paciente.password:}")
+    private String pacienteSenha;
+
     public DevDataInitializer(
             UsuarioService usuarioService,
             NotificacaoRepository notificacaoRepository,
@@ -51,6 +60,7 @@ public class DevDataInitializer implements CommandLineRunner {
     public void run(String... args) {
         criarAdministradorSeConfigurado();
         criarMedicoSeConfigurado();
+        criarPacienteSeConfigurado();
         seedMockData();
     }
 
@@ -116,6 +126,30 @@ public class DevDataInitializer implements CommandLineRunner {
 
         System.out.println(
                 "Usuário médico de desenvolvimento criado com sucesso."
+        );
+    }
+
+    private void criarPacienteSeConfigurado() {
+
+        if (pacienteCpf.isBlank()
+                || pacienteNome.isBlank()
+                || pacienteSenha.isBlank()) {
+            return;
+        }
+
+        if (usuarioService.buscarPorCpf(pacienteCpf).isPresent()) {
+            return;
+        }
+
+        usuarioService.cadastrarUsuario(
+                pacienteCpf,
+                pacienteNome,
+                pacienteSenha,
+                Role.PACIENTE
+        );
+
+        System.out.println(
+                "Usuário paciente de desenvolvimento criado com sucesso."
         );
     }
 }
