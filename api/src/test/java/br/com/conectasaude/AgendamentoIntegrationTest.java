@@ -1,0 +1,256 @@
+package br.com.conectasaude;
+
+import br.com.conectasaude.dto.agendamento.AgendamentoRequest;
+import br.com.conectasaude.dto.agendamento.AgendamentoResponse;
+import br.com.conectasaude.model.Agendamento;
+import br.com.conectasaude.model.Role;
+import br.com.conectasaude.model.Usuario;
+import br.com.conectasaude.repository.AgendamentoRepository;
+import br.com.conectasaude.repository.UsuarioRepository;
+import br.com.conectasaude.service.AgendamentoService;
+import br.com.conectasaude.service.JwtService;
+import br.com.conectasaude.service.UsuarioService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest(properties = {
+        "app.jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+        "app.jwt.expiration-minutes=60"
+})
+@AutoConfigureMockMvc
+class AgendamentoIntegrationTest {
+
+    private static final DateTimeFormatter FORMATO_HORARIO =
+            DateTimeFormatter.ofPattern("HH:mm");
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private AgendamentoService agendamentoService;
+
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @BeforeEach
+    void limparBase() {
+        agendamentoRepository.deleteAll();
+        usuarioRepository.deleteAll();
+    }
+
+    @Test
+    void getAppointments_semAutenticacao_retorna401() throws Exception {
+        mockMvc.perform(get("/api/appointments"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAppointments_comPerfilMedico_retorna403() throws Exception {
+        Usuario medico = usuarioService.cadastrarUsuario(
+                "11111111111",
+                "Medico Teste",
+                "SenhaTeste1!",
+                Role.MEDICO
+        );
+        String token = jwtService.gerarToken(medico);
+
+        mockMvc.perform(get("/api/appointments")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAppointments_comPerfilPaciente_retorna200() throws Exception {
+        Usuario paciente = criarPaciente("22222222222", "Paciente Teste");
+        String token = jwtService.gerarToken(paciente);
+
+        mockMvc.perform(get("/api/appointments")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointments").isArray());
+    }
+
+    @Test
+    void getAppointments_isolaAgendamentosEntrePacientes() throws Exception {
+        Usuario pacienteA = criarPaciente("22222222222", "Paciente A");
+        Usuario pacienteB = criarPaciente("33333333333", "Paciente B");
+
+        AgendamentoResponse agendamentoA = agendamentoService.criar(
+                criarRequestFuturo("UBS Centro", "Clínica Geral"),
+                pacienteA.getId()
+        );
+        agendamentoService.criar(
+                criarRequestFuturo("UBS Norte", "Pediatria"),
+                pacienteB.getId()
+        );
+
+        String tokenA = jwtService.gerarToken(pacienteA);
+
+        mockMvc.perform(get("/api/appointments")
+                        .header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appointments", hasSize(1)))
+                .andExpect(jsonPath("$.appointments[0].id")
+                        .value(agendamentoA.id()))
+                .andExpect(jsonPath("$.appointments[0].location")
+                        .value("UBS Centro"));
+    }
+
+    @Test
+    void postAppointments_pacienteCriaAgendamentoAssociadoAoUsuario()
+            throws Exception {
+        Usuario paciente = criarPaciente("22222222222", "Paciente Teste");
+        String token = jwtService.gerarToken(paciente);
+
+        AgendamentoRequest request = criarRequestFuturo(
+                "UBS Centro",
+                "Clínica Geral"
+        );
+
+        String body = objectMapper.writeValueAsString(Map.of(
+                "date", request.date(),
+                "time", request.time(),
+                "location", request.location(),
+                "specialty", request.specialty(),
+                "notes", "Observação de teste",
+                "usuarioId", "00000000-0000-0000-0000-000000000099"
+        ));
+
+        String response = mockMvc.perform(post("/api/appointments")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message")
+                        .value("Agendamento criado com sucesso"))
+                .andExpect(jsonPath("$.appointment.id").isNotEmpty())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String id = objectMapper.readTree(response)
+                .get("appointment")
+                .get("id")
+                .asString();
+
+        Agendamento salvo = agendamentoRepository
+                .findByIdAndUsuarioId(id, paciente.getId())
+                .orElseThrow();
+
+        assertThat(salvo.getId()).isEqualTo(id);
+        assertThat(agendamentoRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void deleteAppointments_excluiProprioAgendamento() throws Exception {
+        Usuario paciente = criarPaciente("22222222222", "Paciente Teste");
+        AgendamentoResponse criado = agendamentoService.criar(
+                criarRequestFuturo("UBS Centro", "Clínica Geral"),
+                paciente.getId()
+        );
+        String token = jwtService.gerarToken(paciente);
+
+        mockMvc.perform(delete("/api/appointments/" + criado.id())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Consulta cancelada com sucesso"));
+
+        assertThat(agendamentoRepository.findById(criado.id())).isEmpty();
+    }
+
+    @Test
+    void deleteAppointments_agendamentoDeOutroPaciente_retornaNaoEncontrado()
+            throws Exception {
+        Usuario pacienteA = criarPaciente("22222222222", "Paciente A");
+        Usuario pacienteB = criarPaciente("33333333333", "Paciente B");
+
+        AgendamentoResponse agendamentoB = agendamentoService.criar(
+                criarRequestFuturo("UBS Norte", "Pediatria"),
+                pacienteB.getId()
+        );
+
+        String tokenA = jwtService.gerarToken(pacienteA);
+
+        mockMvc.perform(delete("/api/appointments/" + agendamentoB.id())
+                        .header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error")
+                        .value("Consulta não encontrada."));
+
+        assertThat(agendamentoRepository.findById(agendamentoB.id()))
+                .isPresent();
+    }
+
+    @Test
+    void deleteAppointments_idInexistente_retornaNaoEncontrado()
+            throws Exception {
+        Usuario paciente = criarPaciente("22222222222", "Paciente Teste");
+        String token = jwtService.gerarToken(paciente);
+
+        mockMvc.perform(delete("/api/appointments/apt-inexistente")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error")
+                        .value("Consulta não encontrada."));
+    }
+
+    private Usuario criarPaciente(String cpf, String nome) {
+        return usuarioService.cadastrarUsuario(
+                cpf,
+                nome,
+                "SenhaTeste1!",
+                Role.PACIENTE
+        );
+    }
+
+    private AgendamentoRequest criarRequestFuturo(
+            String location,
+            String specialty
+    ) {
+        LocalDateTime futuro = LocalDateTime.now()
+                .plusDays(1)
+                .withHour(10)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+
+        return new AgendamentoRequest(
+                futuro.toLocalDate().toString(),
+                futuro.toLocalTime().format(FORMATO_HORARIO),
+                location,
+                specialty,
+                "Observação de teste"
+        );
+    }
+}
