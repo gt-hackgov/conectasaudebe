@@ -1,6 +1,10 @@
 package br.com.conectasaude.config;
 
+import br.com.conectasaude.model.Notificacao;
 import br.com.conectasaude.model.Role;
+import br.com.conectasaude.model.TipoNotificacao;
+import br.com.conectasaude.repository.AgendamentoRepository;
+import br.com.conectasaude.repository.NotificacaoRepository;
 import br.com.conectasaude.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +16,8 @@ import org.springframework.stereotype.Component;
 public class DevDataInitializer implements CommandLineRunner {
 
     private final UsuarioService usuarioService;
+    private final NotificacaoRepository notificacaoRepository;
+    private final AgendamentoRepository agendamentoRepository;
 
     @Value("${app.dev.user.cpf:}")
     private String cpf;
@@ -31,6 +37,16 @@ public class DevDataInitializer implements CommandLineRunner {
     @Value("${app.dev.medico.password:}")
     private String medicoSenha;
 
+    public DevDataInitializer(
+            UsuarioService usuarioService,
+            NotificacaoRepository notificacaoRepository,
+            AgendamentoRepository agendamentoRepository
+    ) {
+        this.usuarioService = usuarioService;
+        this.notificacaoRepository = notificacaoRepository;
+        this.agendamentoRepository = agendamentoRepository;
+    }
+
     @Override
     public void run(String... args) {
         criarAdministradorSeConfigurado();
@@ -38,24 +54,22 @@ public class DevDataInitializer implements CommandLineRunner {
         seedMockData();
     }
 
-    private final br.com.conectasaude.repository.NotificacaoRepository notificacaoRepository;
-    private final br.com.conectasaude.repository.AgendamentoRepository agendamentoRepository;
-
-    public DevDataInitializer(
-        UsuarioService usuarioService,
-        br.com.conectasaude.repository.NotificacaoRepository notificacaoRepository,
-        br.com.conectasaude.repository.AgendamentoRepository agendamentoRepository
-    ) {
-        this.usuarioService = usuarioService;
-        this.notificacaoRepository = notificacaoRepository;
-        this.agendamentoRepository = agendamentoRepository;
-    }
-
     private void seedMockData() {
         if (notificacaoRepository.count() == 0) {
-            notificacaoRepository.save(new br.com.conectasaude.model.Notificacao("notif-1", "Previna-se da Dengue!", "Elimine focos de água parada. Converse com nossa assistente virtual para saber os sintomas e cuidados.", "Agora"));
-            notificacaoRepository.save(new br.com.conectasaude.model.Notificacao("notif-2", "Lembrete de Consulta", "Sua consulta agendada está próxima. Chegue com 15 minutos de antecedência na UBS.", "Há 1 hora"));
-            notificacaoRepository.save(new br.com.conectasaude.model.Notificacao("notif-3", "Campanha de Vacinação", "Vacinação contra Influenza disponível em todas as UBS do município.", "Ontem"));
+            notificacaoRepository.save(new Notificacao(
+                    "notif-1",
+                    "Previna-se da Dengue!",
+                    "Elimine focos de água parada. Converse com nossa assistente virtual para saber os sintomas e cuidados.",
+                    "Agora",
+                    TipoNotificacao.GLOBAL
+            ));
+            notificacaoRepository.save(new Notificacao(
+                    "notif-3",
+                    "Campanha de Vacinação",
+                    "Vacinação contra Influenza disponível em todas as UBS do município.",
+                    "Ontem",
+                    TipoNotificacao.GLOBAL
+            ));
         }
     }
 

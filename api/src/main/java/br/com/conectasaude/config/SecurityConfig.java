@@ -89,6 +89,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auditoria/**")
                         .hasAnyRole("AUDITOR", "ADMIN")
 
+                        .requestMatchers("/api/appointments/**")
+                        .hasRole("PACIENTE")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/notifications"
+                        ).hasRole("PACIENTE")
+
                         .anyRequest()
                         .authenticated()
                 )
