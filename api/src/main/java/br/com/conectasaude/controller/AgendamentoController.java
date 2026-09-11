@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -85,6 +86,50 @@ public class AgendamentoController {
                         "message", "Agendamento criado com sucesso",
                         "appointment", saved
                 ));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateAppointment(
+            @PathVariable String id,
+            @Valid @RequestBody AgendamentoRequest request,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest httpRequest
+    ) {
+        UUID usuarioId = UUID.fromString(jwt.getSubject());
+        Role role = Role.valueOf(jwt.getClaimAsString("role"));
+
+        Optional<AgendamentoResponse> atualizado =
+                agendamentoService.atualizar(id, request, usuarioId);
+
+        if (atualizado.isEmpty()) {
+            auditService.registrar(
+                    usuarioId,
+                    role,
+                    AuditAction.ATUALIZAR_REGISTRO,
+                    "AGENDAMENTOS",
+                    AuditResult.NEGADO,
+                    httpRequest
+            );
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Consulta não encontrada."));
+        }
+
+        auditService.registrar(
+                usuarioId,
+                role,
+                AuditAction.ATUALIZAR_REGISTRO,
+                "AGENDAMENTOS",
+                AuditResult.SUCESSO,
+                httpRequest
+        );
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Agendamento atualizado com sucesso",
+                        "appointment", atualizado.get()
+                )
+        );
     }
 
     @DeleteMapping("/{id}")

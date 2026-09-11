@@ -70,6 +70,31 @@ public class AgendamentoService {
         return AgendamentoResponse.fromEntity(saved);
     }
 
+    public Optional<AgendamentoResponse> atualizar(
+            String id,
+            AgendamentoRequest request,
+            UUID usuarioId
+    ) {
+        Optional<Agendamento> existente =
+                agendamentoRepository.findByIdAndUsuarioId(id, usuarioId);
+
+        if (existente.isEmpty()) {
+            return Optional.empty();
+        }
+
+        validarDataHora(request.date(), request.time());
+
+        Agendamento agendamento = existente.get();
+        agendamento.setDate(request.date());
+        agendamento.setTime(request.time());
+        agendamento.setLocation(request.location());
+        agendamento.setSpecialty(request.specialty());
+        agendamento.setNotes(request.notes());
+
+        Agendamento saved = agendamentoRepository.save(agendamento);
+        return Optional.of(AgendamentoResponse.fromEntity(saved));
+    }
+
     public boolean excluir(String id, UUID usuarioId) {
         Optional<Agendamento> existente =
                 agendamentoRepository.findByIdAndUsuarioId(id, usuarioId);
