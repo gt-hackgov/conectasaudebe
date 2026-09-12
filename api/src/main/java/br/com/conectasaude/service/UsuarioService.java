@@ -1,5 +1,6 @@
 package br.com.conectasaude.service;
 
+import br.com.conectasaude.exception.CpfJaCadastradoException;
 import br.com.conectasaude.model.Role;
 import br.com.conectasaude.model.Usuario;
 import br.com.conectasaude.repository.UsuarioRepository;
@@ -30,7 +31,7 @@ public class UsuarioService {
     ) {
 
         if (usuarioRepository.existsByCpf(cpf)) {
-            throw new IllegalArgumentException("CPF já cadastrado");
+            throw new CpfJaCadastradoException();
         }
 
         String passwordHash = passwordEncoder.encode(senha);
