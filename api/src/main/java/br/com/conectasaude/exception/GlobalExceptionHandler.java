@@ -36,6 +36,20 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(CpfJaCadastradoException.class)
+    public ResponseEntity<ApiError> tratarCpfJaCadastrado(
+            CpfJaCadastradoException exception,
+            HttpServletRequest request
+    ) {
+
+        return criarResposta(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request,
+                Map.of()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> tratarValidacao(
             MethodArgumentNotValidException exception,

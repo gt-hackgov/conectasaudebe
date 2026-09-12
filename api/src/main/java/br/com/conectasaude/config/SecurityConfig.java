@@ -75,6 +75,11 @@ public class SecurityConfig {
                                 "/api/auth/login"
                         ).permitAll()
 
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/auth/register"
+                        ).permitAll()
+
                         .requestMatchers("/error").permitAll()
 
                         .requestMatchers("/api/admin/**")
