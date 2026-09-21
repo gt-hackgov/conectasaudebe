@@ -23,6 +23,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'maven'
+          cache-dependency-path: 'api/pom.xml'
 
       - name: Build com Maven
+        working-directory: ./api
         run: mvn -B clean package
