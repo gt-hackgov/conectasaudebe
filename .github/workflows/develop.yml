@@ -1,0 +1,44 @@
+name: Auto PR para main
+
+on:
+  push:
+    branches:
+      - 'develop'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    if: github.event.deleted == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Criar PR se não existir
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # Verifica se já existe um PR aberto dessa branch para main
+          existing_pr=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+
+          if [ -n "$existing_pr" ]; then
+            echo "PR já existe (#$existing_pr), pulando criação."
+            exit 0
+          fi
+
+          # Evita erro caso não haja commits novos em relação à main
+          if ! gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "PR $BRANCH → main" \
+              --body "PR automático gerado a partir de um commit na branch \`$BRANCH\`."
+          then
+            echo "Não foi possível criar o PR (provavelmente sem diferenças em relação à main)."
+            exit 0
+          fi
