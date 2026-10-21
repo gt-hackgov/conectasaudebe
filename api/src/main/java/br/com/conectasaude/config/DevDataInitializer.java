@@ -11,6 +11,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+
 @Component
 @Profile("dev")
 public class DevDataInitializer implements CommandLineRunner {
@@ -56,8 +58,31 @@ public class DevDataInitializer implements CommandLineRunner {
         this.agendamentoRepository = agendamentoRepository;
     }
 
+    /**
+     * Corrige nomes com acento que chegam "desconfigurados" pelas variáveis de ambiente
+     * (ex.: "JoÃ£o" em vez de "João"). Isso acontece quando o texto em UTF-8 é lido
+     * como ISO-8859-1 — comum no terminal do Windows ou em arquivos .properties/.env.
+     * Se o nome já estiver correto, ele é devolvido sem alteração.
+     */
+    static String corrigirAcentuacao(String texto) {
+        if (texto == null || (texto.indexOf('Ã') < 0 && texto.indexOf('Â') < 0)) {
+            return texto;
+        }
+        for (char c : texto.toCharArray()) {
+            if (c > 0xFF) {
+                return texto; // não é o padrão de erro de codificação; mantém como está
+            }
+        }
+        String corrigido = new String(texto.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        return corrigido.indexOf('�') >= 0 ? texto : corrigido;
+    }
+
     @Override
     public void run(String... args) {
+        nome = corrigirAcentuacao(nome);
+        medicoNome = corrigirAcentuacao(medicoNome);
+        pacienteNome = corrigirAcentuacao(pacienteNome);
+
         criarAdministradorSeConfigurado();
         criarMedicoSeConfigurado();
         criarPacienteSeConfigurado();
