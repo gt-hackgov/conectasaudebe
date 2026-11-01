@@ -52,7 +52,13 @@ class IndicadoresIntegrationTest {
                 .andExpect(jsonPath("$.consultas", hasSize(6)))
                 .andExpect(jsonPath("$.consultas[0].linhas", hasSize(6)))
                 .andExpect(jsonPath("$.consultas[2].linhas[0].unidade").value("UBS Parque das Flores"))
-                .andExpect(jsonPath("$.consultas[3].linhas[0].posicao").value(1));
+                .andExpect(jsonPath("$.consultas[3].linhas[0].posicao").value(1))
+                .andExpect(jsonPath("$.analises", hasSize(4)))
+                .andExpect(jsonPath("$.analises[0].id").value("upa_volume_espera"))
+                .andExpect(jsonPath("$.analises[0].n", greaterThan(0)))
+                .andExpect(jsonPath("$.analises[0].r", greaterThan(0.0)))
+                .andExpect(jsonPath("$.analises[0].previsao.y", greaterThan(0.0)))
+                .andExpect(jsonPath("$.analises[3].pontos", hasSize(30)));
     }
 
     @Test
