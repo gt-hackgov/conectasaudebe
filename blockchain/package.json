@@ -1,0 +1,8 @@
+{
+  "name": "conecta-saude-blockchain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Protótipo de smart contract (Solidity) para auditoria da fila por classificação de risco do Conecta Saúde",
+  "scripts": { "test": "node teste.js" },
+  "dependencies": { "ethers": "6.13.4", "ganache": "7.9.2", "solc": "0.8.24" }
+}
