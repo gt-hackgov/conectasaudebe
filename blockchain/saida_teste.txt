@@ -1,0 +1,31 @@
+Contrato implantado em 0x3A6D98E2204DC361F9d6e0ABD044F276fA39EA1f (gás: 695949)
+Secretaria (dona): 0x9544e5925481a7E58877F8D0f4CBca5274312e8c
+[OK] Secretaria autorizou a UPA 0xD9c2c27189Ab51372d72b1e9e80c583d5b169e49
+[OK] Entrada senha 1 (VERDE) (gás: 139228)
+[OK] Entrada senha 2 (AMARELO) (gás: 122128)
+[OK] Entrada senha 3 (AZUL) (gás: 122128)
+[OK] Entrada senha 4 (VERDE) (gás: 87978)
+[OK] Entrada senha 5 (LARANJA) (gás: 122128)
+[OK] Entrada senha 6 (AMARELO) (gás: 87978)
+Próximo pela regra: senha 5 (LARANJA)
+[OK] Entrada senha 7 (VERMELHO) (gás: 122116)
+Próximo pela regra: senha 7 (VERMELHO)
+[REJEITADO, como esperado] Chamar a senha 1 (VERDE) antes da 7 (VERMELHO) — tentativa de furar a fila → ForaDeOrdem(1, 7)
+[REJEITADO, como esperado] Endereço não autorizado registrando entrada → UnidadeNaoAutorizada()
+[REJEITADO, como esperado] Registrar de novo a senha 2 → SenhaJaRegistrada(2)
+[REJEITADO, como esperado] Entrada sem hash do registro → HashInvalido()
+[REJEITADO, como esperado] UPA tentando autorizar outro endereço → SomenteSecretaria()
+[OK] Chamada da senha 7 (gás: 80908)
+[OK] Chamada da senha 5 (gás: 68301)
+[OK] Chamada da senha 2 (gás: 72794)
+[OK] Chamada da senha 6 (gás: 55744)
+[OK] Chamada da senha 1 (gás: 77287)
+[OK] Chamada da senha 4 (gás: 60237)
+[OK] Chamada da senha 3 (gás: 81780)
+Ordem de atendimento registrada: 7 → 5 → 2 → 6 → 1 → 4 → 3
+[REJEITADO, como esperado] Chamar com a fila vazia → FilaVazia()
+Auditor confere registro da senha 7 com o hash correto: true
+Auditor confere registro da senha 7 com dado adulterado: false
+Totais: entradas=7 chamadas=7
+Eventos PacienteChamado publicados: 7 (ex.: senha 7, cor VERMELHO)
+RESULTADO: ordem idêntica à do heap do back-end (7, 5, 2, 6, 1, 4, 3) ✔
